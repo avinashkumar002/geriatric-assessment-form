@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import {
+  Alert,
   Button,
   Checkbox,
+  Code,
   Container,
   NumberInput,
   Paper,
@@ -11,7 +14,7 @@ import {
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { schemaResolver, useForm } from '@mantine/form';
-import { assessmentSchema, MOBILITY } from './schema';
+import { assessmentSchema, MOBILITY, type Assessment } from './schema';
 import type { AssessmentFormValues } from './types';
 
 const toLabel = (value: string) => {
@@ -34,7 +37,17 @@ const initialValues: AssessmentFormValues = {
   consentObtained: false,
 };
 
-export function AssessmentForm() {
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+type AssessmentFormProps = {
+  onSave?: (values: Assessment) => void;
+  saveDelayMs?: number;
+};
+
+export function AssessmentForm({ onSave, saveDelayMs = 800 }: AssessmentFormProps) {
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState<Assessment | null>(null);
+
   const form = useForm<AssessmentFormValues>({
     mode: 'uncontrolled',
     initialValues,
@@ -42,17 +55,23 @@ export function AssessmentForm() {
     validateInputOnBlur: true,
   });
 
+  const handleSubmit = async (values: AssessmentFormValues) => {
+    const parsed = assessmentSchema.parse(values); // what Zod returns, not raw form state
+    setSaved(null);
+    setSaving(true);
+    await wait(saveDelayMs);
+    setSaving(false);
+    setSaved(parsed);
+    onSave?.(parsed);
+  };
+
   return (
     <Container size="sm" py="xl">
       <Paper withBorder shadow="sm" p="lg">
         <Title order={2} mb="md">
           Geriatric Care Assessment
         </Title>
-        <form
-          onSubmit={form.onSubmit(() => {
-            // save handler comes in the next step
-          })}
-        >
+        <form onSubmit={form.onSubmit(handleSubmit)}>
           <Stack>
             <TextInput
               label="Medical record number"
@@ -112,9 +131,16 @@ export function AssessmentForm() {
               key={form.key('consentObtained')}
               {...form.getInputProps('consentObtained', { type: 'checkbox' })}
             />
-            <Button type="submit">Save assessment</Button>
+            <Button type="submit" loading={saving}>
+              Save assessment
+            </Button>
           </Stack>
         </form>
+        {saved && (
+          <Alert color="green" title="Assessment saved" mt="md">
+            <Code block>{JSON.stringify(saved, null, 2)}</Code>
+          </Alert>
+        )}
       </Paper>
     </Container>
   );
