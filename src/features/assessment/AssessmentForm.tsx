@@ -5,6 +5,7 @@ import {
   Checkbox,
   Code,
   Container,
+  Group,
   NumberInput,
   Paper,
   Select,
@@ -14,6 +15,7 @@ import {
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { schemaResolver, useForm } from '@mantine/form';
+import { sampleAssessment } from './fixtures';
 import { assessmentSchema, MOBILITY, type Assessment } from './schema';
 import type { AssessmentFormValues } from './types';
 
@@ -63,6 +65,12 @@ export function AssessmentForm({ onSave, saveDelayMs = 800 }: AssessmentFormProp
     setSaving(false);
     setSaved(parsed);
     onSave?.(parsed);
+  };
+
+  const loadSample = () => {
+    form.setValues(sampleAssessment);
+    form.clearErrors();
+    setSaved(null);
   };
 
   return (
@@ -131,9 +139,14 @@ export function AssessmentForm({ onSave, saveDelayMs = 800 }: AssessmentFormProp
               key={form.key('consentObtained')}
               {...form.getInputProps('consentObtained', { type: 'checkbox' })}
             />
-            <Button type="submit" loading={saving}>
-              Save assessment
-            </Button>
+            <Group>
+              <Button type="submit" loading={saving}>
+                Save assessment
+              </Button>
+              <Button type="button" variant="default" onClick={loadSample} disabled={saving}>
+                Load sample patient
+              </Button>
+            </Group>
           </Stack>
         </form>
         {saved && (
