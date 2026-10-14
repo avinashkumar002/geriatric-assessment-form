@@ -1,44 +1,51 @@
-# Mantine Vite template
+# Geriatric Care Assessment Form
 
-## Features
+A one-page form a visiting nurse fills in when checking on an elderly patient at home.
+Built with React 19, TypeScript, Mantine, `@mantine/form` and Zod 4.
 
-This template comes with the following features:
+**Live demo:** https://geriatric-assessment-form-ks6b27j98-avinashkumar002s-projects.vercel.app/
 
-- [PostCSS](https://postcss.org/) with [mantine-postcss-preset](https://mantine.dev/styles/postcss-preset)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Storybook](https://storybook.js.org/)
-- [Vitest](https://vitest.dev/) setup with [React Testing Library](https://testing-library.com/docs/react-testing-library/intro)
-- [Vite+](https://viteplus.dev/) unified toolchain: Vite, Vitest, Oxlint and Oxfmt are run with `vp` and configured in `vite.config.mjs`
+All data is invented. No real patient information is used anywhere in the repo.
 
-## Vite+ CLI
+## Run it
 
-The template works without any global installation: `vp` is installed as a dev dependency and all npm scripts use it.
+yarn install      # the template uses Yarn 4
+yarn dev          # http://localhost:5173
+yarn test         # typecheck, lint, format check, tests, build
 
-Optionally, you can install the [global `vp` CLI](https://viteplus.dev/guide/global-cli).
-It automatically switches to the Node.js version pinned in `.node-version` and lets you run commands directly, for example `vp dev` or `vp check --fix` instead of `yarn vp check --fix`.
+## How it works
 
-## npm scripts
+- All validation comes from the supplied Zod schema in `src/features/assessment/schema.ts`,
+  wired in through `schemaResolver`. No rules are re-implemented in the components.
+- Form values are typed as an input shape (`AssessmentFormValues` in `types.ts`), because an
+  empty form cannot satisfy `Assessment`. On submit, the schema parses the values and the
+  parsed output is what gets saved and displayed.
+- Validation runs on blur and on submit. Untouched fields stay quiet.
+- A valid submit fakes an ~800ms save with a loading button, then shows a success alert with
+  the Zod-parsed values.
+- Mobility options are built from the `MOBILITY` array, so adding a value there adds it to
+  the dropdown.
+- **Load sample patient** fills the form from `fixtures.ts`.
 
-## Build and dev scripts
+## Tests
 
-- `dev` – start development server
-- `build` – build production version of the app
-- `build:analyze` – build the app and open bundle size visualization (`dist/stats.html`)
-- `preview` – locally preview production build
+- `schema.test.ts`: date of birth exactly 60 on the assessment date is accepted, one day
+  short is rejected with the error on `dateOfBirth`.
+- `AssessmentForm.test.tsx`: loads the sample patient, submits, and asserts the save handler
+  received the parsed values.
 
-### Testing scripts
+## Unfinished and why
 
-- `check` – checks formatting, lint rules and TypeScript types with `vp check`
-- `check:fix` – same as `check`, fixes formatting and auto-fixable lint errors
-- `typecheck` – checks TypeScript types
-- `lint` – runs oxlint and stylelint
-- `format:test` – checks files with oxfmt
-- `vitest` – runs vitest tests
-- `vitest:watch` – starts vitest watch
-- `test` – runs `check`, `stylelint`, `vitest` and `build` scripts
+- Only the two tests the brief asked for. The other rejection and acceptance cases in the
+  fixtures table were not automated. Next step would be a table-driven schema test covering
+  every row.
+- The "empty form gives exactly 9 errors" check was done by hand, not in a test.
+- The JS bundle is over 500 kB (Mantine). Code-splitting would fix the build warning.
+- Leftover template files (Storybook config, router dependency) were not removed.
 
-### Other scripts
+## Time spent
 
-- `storybook` – starts storybook dev server
-- `storybook:build` – build production storybook bundle to `storybook-static`
-- `format:write` – formats all files with oxfmt
+About 2 hours in total. Roughly 1h 40m was building and testing (first commit 18:54, last
+code commit 20:12), and about 35 minutes went on the Vercel deployment: Vercel used Yarn 1
+and then hit a Corepack ESM error, which I fixed by vendoring the Yarn release with
+`yarnPath` (`chore: vendor yarn release for vercel`).
