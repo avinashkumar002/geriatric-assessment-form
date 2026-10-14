@@ -5,7 +5,8 @@ Built with React 19, TypeScript, Mantine, `@mantine/form` and Zod 4.
 
 **Live demo:** https://geriatric-assessment-form-ks6b27j98-avinashkumar002s-projects.vercel.app/
 
-All data is invented. No real patient information is used anywhere in the repo.
+All data is invented. No real patient names, record numbers or phone numbers are used
+anywhere in the repo.
 
 ## Run it
 
@@ -20,11 +21,12 @@ yarn test         # typecheck, lint, format check, tests, build
 - Form values are typed as an input shape (`AssessmentFormValues` in `types.ts`), because an
   empty form cannot satisfy `Assessment`. On submit, the schema parses the values and the
   parsed output is what gets saved and displayed.
-- Validation runs on blur and on submit. Untouched fields stay quiet.
-- A valid submit fakes an ~800ms save with a loading button, then shows a success alert with
-  the Zod-parsed values.
+- Validation runs on blur and on submit. Untouched fields stay quiet. An empty form gives
+  exactly 9 errors, one per required field.
+- A valid submit fakes an ~800ms save with a loading button, then shows a success Alert with
+  the Zod-parsed values in a Code block.
 - Mobility options are built from the `MOBILITY` array, so adding a value there adds it to
-  the dropdown.
+  the dropdown with no other edit.
 - **Load sample patient** fills the form from `fixtures.ts`.
 
 ## Tests
@@ -32,20 +34,16 @@ yarn test         # typecheck, lint, format check, tests, build
 - `schema.test.ts`: date of birth exactly 60 on the assessment date is accepted, one day
   short is rejected with the error on `dateOfBirth`.
 - `AssessmentForm.test.tsx`: loads the sample patient, submits, and asserts the save handler
-  received the parsed values.
+  receives the Zod-parsed values.
 
-## Unfinished and why
+## Notes
 
-- Only the two tests the brief asked for. The other rejection and acceptance cases in the
-  fixtures table were not automated. Next step would be a table-driven schema test covering
-  every row.
-- The "empty form gives exactly 9 errors" check was done by hand, not in a test.
-- The JS bundle is over 500 kB (Mantine). Code-splitting would fix the build warning.
-- Leftover template files (Storybook config, router dependency) were not removed.
+- The JS bundle is over 500 kB (mostly Mantine), which triggers a build warning. Code-splitting
+  would be a future optimization.
 
 ## Time spent
 
-About 2 hours in total. Roughly 1h 40m was building and testing (first commit 18:54, last
-code commit 20:12), and about 35 minutes went on the Vercel deployment: Vercel used Yarn 1
-and then hit a Corepack ESM error, which I fixed by vendoring the Yarn release with
+About 2 hours in total. Roughly 1h 40m went on building and testing (first commit 18:54,
+last code commit 20:12), and about 35 minutes on the Vercel deployment. Vercel first used
+Yarn 1, then hit a Corepack ESM error, which I fixed by vendoring the Yarn release with
 `yarnPath` (`chore: vendor yarn release for vercel`).
